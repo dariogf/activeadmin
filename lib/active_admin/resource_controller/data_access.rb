@@ -221,7 +221,7 @@ module ActiveAdmin
       def apply_scoping(chain)
         @collection_before_scope = chain
 
-        if !current_scope.empty?
+        if !current_scope.blank?
           grouped_chain=chain
           current_scope.each do |cs|
             grouped_chain = scope_chain(cs, grouped_chain)
@@ -250,7 +250,13 @@ module ActiveAdmin
             @current_scope = [active_admin_config.get_scope_by_id(params[:scope])]
         elsif params && !(grouped_scopes=params.keys.select{|e| e.index('scope_')==0}).empty?
           grouped_scopes.each do |gs|
-            @current_scope << active_admin_config.get_scope_by_id(params[gs])
+            if params[gs]
+              cs = active_admin_config.get_scope_by_id(params[gs])
+              #raise "Empty scope: #{gs}: #{params.to_json}" if !cs
+              @current_scope << cs if !cs.nil?
+            else
+              #raise "Empty scope: #{gs}: #{params.to_json}"
+            end
           end
         else
             @current_scope = [active_admin_config.default_scope(self)]

@@ -12,9 +12,9 @@ module ActiveAdmin
         -> do
           active_filters = ActiveAdmin::Filters::Active.new(active_admin_config, assigns[:search])
           span do
-            if current_scope
+            if !current_scope.empty?
               h4 I18n.t("active_admin.search_status.current_scope"), style: 'display: inline'
-              b scope_name(current_scope), class: 'current_scope_name', style: "display: inline"
+              b current_scope.map{|s| scope_name(s)}.join('|'), class: 'current_scope_name', style: "display: inline"
             end
             div style: "margin-top: 10px" do
               h4 I18n.t("active_admin.search_status.current_filters"), style: 'margin-bottom: 10px'
@@ -42,7 +42,7 @@ module ActiveAdmin
       protected
 
       def sidebar_options
-        { only: :index, if: -> { active_admin_config.current_filters_enabled? && (params[:q] || params[:scope]) } }
+        { only: :index, if: -> { active_admin_config.current_filters_enabled? && (params[:q] || !params.select{|k,v| k.index('scope')==0}.empty?) } }
       end
 
     end

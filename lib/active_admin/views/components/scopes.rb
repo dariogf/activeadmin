@@ -34,9 +34,18 @@ module ActiveAdmin
 
       def build_scope(scope, options)
         li class: classes_for_scope(scope) do
-          params = request.query_parameters.except :page, :scope, :commit, :format
+          scope_parameter_name='scope'.to_sym
+          scope_parameter_name="scope_#{scope.group}".to_sym if !scope.group.blank?
 
-          a href: url_for(scope: scope.id, params: params), class: 'table_tools_button' do
+          # remove global scope and this one
+          params=request.query_parameters.except :page, :scope, scope_parameter_name, :commit, :format
+
+          # remove all scope params if this scope doesn't have a group
+          if !scope.group
+            params=params.select{|k,v| !(k.index('scope_')==0)}
+          end
+
+          a href: url_for("#{scope_parameter_name}": scope.id, params: params), class: 'table_tools_button' do
             text_node scope_name(scope)
             span class: 'count' do
               "(#{get_scope_count(scope)})"

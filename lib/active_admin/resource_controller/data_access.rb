@@ -221,8 +221,12 @@ module ActiveAdmin
       def apply_scoping(chain)
         @collection_before_scope = chain
 
-        if current_scope
-          scope_chain(current_scope, chain)
+        if !current_scope.empty?
+          grouped_chain=chain
+          current_scope.each do |cs|
+            grouped_chain = scope_chain(cs, grouped_chain)
+          end
+          grouped_chain
         else
           chain
         end
@@ -241,11 +245,18 @@ module ActiveAdmin
       end
 
       def current_scope
-        @current_scope ||= if params[:scope]
-                             active_admin_config.get_scope_by_id(params[:scope])
-                           else
-                             active_admin_config.default_scope(self)
-                           end
+        @current_scope=[]
+        if params[:scope]
+            @current_scope = [active_admin_config.get_scope_by_id(params[:scope])]
+        elsif params && !(grouped_scopes=params.keys.select{|e| e.index('scope_')==0}).empty?
+          grouped_scopes.each do |gs|
+            @current_scope << active_admin_config.get_scope_by_id(params[gs])
+          end
+        else
+            @current_scope = [active_admin_config.default_scope(self)]
+        end
+
+        @current_scope
       end
 
       def apply_pagination(chain)
